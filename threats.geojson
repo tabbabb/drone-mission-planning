@@ -1,0 +1,127 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          20000,
+          22000
+        ]
+      },
+      "properties": {
+        "type": "radar_site",
+        "id": "R1",
+        "name": "AN/MPQ-65",
+        "detection_range_m": 10000,
+        "fire_range_m": 8000,
+        "antenna_height_m": 15,
+        "beam_azimuth_deg": 60,
+        "beam_elevation_deg": 60,
+        "facing_deg": 90
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          40000,
+          28000
+        ]
+      },
+      "properties": {
+        "type": "radar_site",
+        "id": "R2",
+        "name": "AN/TPS-75",
+        "detection_range_m": 10000,
+        "fire_range_m": 8000,
+        "antenna_height_m": 12,
+        "beam_azimuth_deg": 60,
+        "beam_elevation_deg": 60,
+        "facing_deg": 270
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              25000,
+              15000
+            ],
+            [
+              28000,
+              17000
+            ],
+            [
+              31000,
+              15000
+            ],
+            [
+              28000,
+              13000
+            ],
+            [
+              25000,
+              15000
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "type": "building_cluster",
+        "name": "临港商务区",
+        "relative_height_m": 120,
+        "num_buildings": 8
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5000,
+              35000
+            ],
+            [
+              15000,
+              38000
+            ],
+            [
+              14000,
+              45000
+            ],
+            [
+              6000,
+              43000
+            ],
+            [
+              3000,
+              39000
+            ],
+            [
+              5000,
+              35000
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "type": "no_fly_zone",
+        "name": "军事禁区"
+      }
+    }
+  ],
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::9801"
+    }
+  }
+}

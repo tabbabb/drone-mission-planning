@@ -1,0 +1,14 @@
+# Large generated files (run generate_hires_dem.py to produce)
+dem_5m.tif
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Claude
+.claude/
+
+# IDE
+.vscode/
+.idea/
