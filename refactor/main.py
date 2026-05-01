@@ -4,7 +4,7 @@
 步骤:
   step1  生成地形图
   step2  威胁建模与可视化
-  step3  (待实现) 雷达盲区
+  step3  雷达盲区分析
   step4  (待实现) 综合地图
   step5  (待实现) 路径规划
 """
@@ -24,6 +24,7 @@ from src.terrain import generate, compute_slope, stats
 from src.utils import MAP_WIDTH, MAP_HEIGHT
 from src.threats import (RADARS, BUILDING_CLUSTER, NO_FLY_ZONE,
                           MOVING_TARGETS, FIXED_TARGETS, WIND, radar_mask)
+from src.radar import compute_viewshed
 
 OUTPUT = "output"
 import os
@@ -277,6 +278,89 @@ def step2_threats(dem=None):
     return dem, radar_masks
 
 
+def step3_blind_zones(dem=None):
+    """步骤3: 雷达探测盲区分析"""
+    print("=" * 50)
+    print("Step 3 — 雷达盲区分析")
+    print("=" * 50)
+
+    if dem is None:
+        dem, X, Y = generate()
+    else:
+        _, X, Y = generate()
+
+    viewsheds, blind_all, blind_terrain, blind_beam, blind_out = compute_viewshed(dem)
+
+    # --- 可视化: 三栏对比 ---
+    fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+    ext = (0, MAP_WIDTH / 1000, 0, MAP_HEIGHT / 1000)
+
+    titles = [
+        f"R1 ({RADARS[0]['型号']}) 视域",
+        f"R2 ({RADARS[1]['型号']}) 视域",
+        "综合盲区分布"
+    ]
+
+    for ax, title, key in zip(axes, titles[:2], ["R1", "R2"]):
+        ax.imshow(dem, extent=ext, origin='lower', cmap='terrain',
+                  aspect='auto', alpha=0.6, zorder=1)
+
+        vis = viewsheds[key]
+        vis_rgba = np.zeros((*vis.shape, 4))
+        vis_rgba[vis, :] = [0.0, 0.8, 0.2, 0.35]
+        ax.imshow(vis_rgba, extent=ext, origin='lower', aspect='auto', zorder=2)
+
+        r = RADARS[0] if key == "R1" else RADARS[1]
+        rx, ry = r["位置"][0] / 1000, r["位置"][1] / 1000
+        ax.plot(rx, ry, 's', color='red', markersize=8, markeredgecolor='black', zorder=4)
+        ax.add_patch(plt.Circle((rx, ry), r["探测距离_m"] / 1000,
+                                 fill=False, edgecolor='red', linestyle='--', linewidth=1))
+
+        ax.set_title(title, fontsize=11, fontweight='bold')
+        ax.set_xlabel('X (km)'); ax.set_ylabel('Y (km)')
+        ax.set_xlim(0, MAP_WIDTH / 1000); ax.set_ylim(0, MAP_HEIGHT / 1000)
+        ax.set_aspect('equal')
+
+    # 综合盲区 (三类分明)
+    ax3 = axes[2]
+    ax3.imshow(dem, extent=ext, origin='lower', cmap='terrain',
+               aspect='auto', alpha=0.6, zorder=1)
+    # 1) 波束角度盲区 (探测圈内但角度不对 — 橙色)
+    bb_rgba = np.zeros((*blind_beam.shape, 4))
+    bb_rgba[blind_beam, :] = [1.0, 0.65, 0.0, 0.35]
+    ax3.imshow(bb_rgba, extent=ext, origin='lower', aspect='auto', zorder=2)
+    # 2) 地形遮挡盲区 (角度内但地形挡 — 深紫)
+    bt_rgba = np.zeros((*blind_terrain.shape, 4))
+    bt_rgba[blind_terrain, :] = [0.58, 0.0, 0.83, 0.40]
+    ax3.imshow(bt_rgba, extent=ext, origin='lower', aspect='auto', zorder=3)
+
+    for r in RADARS:
+        rx, ry = r["位置"][0] / 1000, r["位置"][1] / 1000
+        ax3.plot(rx, ry, 's', color='red', markersize=8, markeredgecolor='black', zorder=5)
+        ax3.add_patch(plt.Circle((rx, ry), r["探测距离_m"] / 1000,
+                                  fill=False, edgecolor='red', linestyle='--', linewidth=1))
+
+    ax3.set_title('雷达探测盲区', fontsize=11, fontweight='bold')
+    ax3.set_xlabel('X (km)'); ax3.set_ylabel('Y (km)')
+    ax3.set_xlim(0, MAP_WIDTH / 1000); ax3.set_ylim(0, MAP_HEIGHT / 1000)
+    ax3.set_aspect('equal')
+
+    leg = [
+        mpatches.Patch(color='#FFA500', alpha=0.35, label='波束角度盲区'),
+        mpatches.Patch(color='purple', alpha=0.40, label='地形遮挡盲区'),
+        mpatches.Patch(color='#00CC33', alpha=0.35, label='雷达可视区'),
+    ]
+    ax3.legend(handles=leg, loc='lower left', fontsize=8)
+
+    plt.tight_layout()
+    path = f'{OUTPUT}/step3_blind_zones.png'
+    plt.savefig(path, dpi=200, bbox_inches='tight', facecolor='white')
+    plt.close()
+    print(f"已保存: {path}")
+    return viewsheds, blind_terrain, blind_beam
+
+
 if __name__ == '__main__':
     dem = step1_terrain()
     _, radar_masks = step2_threats(dem)
+    step3_blind_zones(dem)
